@@ -5,11 +5,10 @@ from titlecase import titlecase
 from tkinter import *
 
 
-def GetFileName(slug):  # this takes a slug and returns the name of the cooresponding file, capitalization doesn't matter
+def GetFileName(slug):  # this takes a slug and returns the filename, capitalization doesn't matter
     setups = os.listdir('//Users/scot/Box/BYU Radio/Top of Mind/2020 Setup Sheets/')
     setupsLower = [x.lower() for x in setups]  # makes all titles in listdir lowercase for cap-free searching
     fileName = str([s for s in setupsLower if slug.lower() in s])
-
     if len(fileName) == 2:
         setupSheet = "NO FILE FOUND WITH \"" + slug + "\" IN NAME"
     elif fileName.count(".docx") > 1:
@@ -28,18 +27,18 @@ def CleanWord(fileSlug):
     cleaned = re.sub('<(.|\n)*?>', '', content)
     return cleaned
 
-###
 
-# get headline
 def GetHeadline(cleaned):
+    # get headline
     headline = cleaned[cleaned.find("HEADLINE: ") + len("HEADLINE: "):cleaned.find("SEGMENT")]
     return headline
 
 
-# get name and title of guest--should be reviewed for proper formatting
 def GetGuest(cleaned):
+    # get name and title of guest--should be reviewed for proper formatting
     nameAndTitle = "Name and Title of Guest(s): "
-    if cleaned.find("Pronunciation:") != -1:  # if "Pronunciation has been deleted, the string will stop at "Pre-Record:"
+    if cleaned.find(
+            "Pronunciation:") != -1:  # if "Pronunciation has been deleted, the string will stop at "Pre-Record:"
         guest = cleaned[cleaned.find(nameAndTitle) + len(nameAndTitle):cleaned.find("Pronunciation:")]
     elif cleaned.find("Pre-Record") != -1:
         guest = cleaned[cleaned.find(nameAndTitle) + len(nameAndTitle):cleaned.find("Pre-Record:")]
@@ -48,15 +47,25 @@ def GetGuest(cleaned):
     return guest
 
 
-# gets intro, goes until it sees "QUESTIONS:" or "OUTRO COPY", whichever comes first
 def GetIntroCopy(cleaned, fileSlug):
-    introCopy = "INTRO COPY (LIVE-READ, WRITTEN-TO-SOUND"
-    indexIntroCopyLeft = cleaned.find(introCopy) + len(introCopy) + 3
-    if cleaned.find("QUESTIONS:") < cleaned.find("OUTRO COPY") and cleaned.find("QUESTIONS:") != -1:
-        intro = cleaned[indexIntroCopyLeft:indexIntroCopyLeft + cleaned[indexIntroCopyLeft:len(cleaned)].find("QUESTIONS:")]
+    # gets intro, goes until it sees "QUESTIONS:" or "OUTRO COPY", whichever comes first
+    if cleaned.find("INTRO COPY (LIVE-READ, WRITTEN-TO-SOUND") != -1:
+        introCopy = "INTRO COPY (LIVE-READ, WRITTEN-TO-SOUND"
+    # guestName = guest[0:guest.find(" ")] #gives first name of guest to be used as stop point for intro
+        indexIntroCopyLeft = cleaned.find(introCopy) + len(introCopy)
+    elif cleaned.find("INTRO COPY") != -1:
+        introCopy = "INTRO COPY"
+        indexIntroCopyLeft = cleaned.find(introCopy) + len(introCopy)
+
+    if cleaned.find("on the line now.") != -1:
+        intro = cleaned[indexIntroCopyLeft:indexIntroCopyLeft + cleaned[indexIntroCopyLeft:len(cleaned)].find(
+            "on the line now.")]
+    elif cleaned.find("QUESTIONS:") < cleaned.find("OUTRO COPY") and cleaned.find("QUESTIONS:") != -1:
+        intro = cleaned[indexIntroCopyLeft:indexIntroCopyLeft + cleaned[indexIntroCopyLeft:len(cleaned)].find(
+            "QUESTIONS:")]
     elif cleaned.find("Welcome.") < cleaned.find("OUTRO COPY") and cleaned.find("Welcome.") != -1:
         intro = cleaned[indexIntroCopyLeft:indexIntroCopyLeft + cleaned[indexIntroCopyLeft:len(cleaned)].find(
-            "Welcome.")]  # guestName)]
+            "Welcome.")]
     else:
         intro = cleaned[
                 indexIntroCopyLeft:indexIntroCopyLeft + cleaned[indexIntroCopyLeft:len(cleaned)].find("OUTRO COPY")]
@@ -70,10 +79,8 @@ def GetIntroCopy(cleaned, fileSlug):
 
     return intro + origAired
 
-###
 
-# this goes into a word document and returns titlecase headline, guest info, and intro copy
-def ScrapeWord(fileSlug):
+def ScrapeWord(fileSlug):  # this goes into a word document and returns titlecase headline, guest info, and intro copy
     cleaned = CleanWord(fileSlug)
 
     headline = GetHeadline(cleaned)
@@ -85,8 +92,7 @@ def ScrapeWord(fileSlug):
     return info
 
 
-# returns titlecase headline, guest info, and intro copy from word
-def GiveEpisodeInfo(fileName): 
+def GiveEpisodeInfo(fileName): # returns titlecase headline, guest info, and intro copy from word
     cleaned = CleanWord(fileName)
 
     # get name and title of guest--should be reviewed for proper formatting
@@ -101,7 +107,7 @@ def GiveEpisodeInfo(fileName):
     return info
 
 
-def ListSlugs(): #TODO change this to adjust number of slugs
+def ListSlugs(): #TODO change this to adjust number of slugs, or don't get
     slugs = [slug_entry_1.get(), slug_entry_2.get(), slug_entry_3.get(),
              slug_entry_4.get(), slug_entry_5.get(), slug_entry_6.get()]
     return slugs
@@ -119,8 +125,7 @@ def PrintSlugs():
     create_txt_done.grid_forget()
 
 
-# this opens/creates a new .txt file, writes webText to it, closes .txt file
-def InsertTxt(webText):
+def InsertTxt(webText):  # this opens/creates a new .txt file, writes webText to it, closes .txt file
     now = datetime.now()
     today = now.strftime("%m-%d-%Y")
     file = "//Users/scot/Desktop/Setups/WebsiteAuto/" + today + ".txt"
