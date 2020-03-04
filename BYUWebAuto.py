@@ -47,37 +47,36 @@ def GetGuest(cleaned):
     return guest
 
 
-def GetIntroCopy(cleaned, fileSlug):
+def GetIntroCopy(cleaned):
     # gets intro, goes until it sees "QUESTIONS:" or "OUTRO COPY", whichever comes first
-    if cleaned.find("INTRO COPY (LIVE-READ, WRITTEN-TO-SOUND") != -1:
-        introCopy = "INTRO COPY (LIVE-READ, WRITTEN-TO-SOUND"
-    # guestName = guest[0:guest.find(" ")] #gives first name of guest to be used as stop point for intro
+    indexIntroCopyLeft = ""
+    if cleaned.find("OUT CUE: I’m Julie Rose. ") != -1:
+        introCopy = "OUT CUE: I’m Julie Rose. "
+        indexIntroCopyLeft = cleaned.find(introCopy) + len(introCopy)
+    elif cleaned.find("INTRO COPY (LIVE-READ, WRITTEN-TO-SOUND). ") != -1:
+        introCopy = "INTRO COPY (LIVE-READ, WRITTEN-TO-SOUND). "
+        indexIntroCopyLeft = cleaned.find(introCopy) + len(introCopy)
+    elif cleaned.find("INTRO COPY (LIVE-READ, WRITTEN-TO-SOUND).") != -1:
+        introCopy = "INTRO COPY (LIVE-READ, WRITTEN-TO-SOUND)."
         indexIntroCopyLeft = cleaned.find(introCopy) + len(introCopy)
     elif cleaned.find("INTRO COPY") != -1:
         introCopy = "INTRO COPY"
         indexIntroCopyLeft = cleaned.find(introCopy) + len(introCopy)
 
-    if cleaned.find("on the line now.") != -1:
-        intro = cleaned[indexIntroCopyLeft:indexIntroCopyLeft + cleaned[indexIntroCopyLeft:len(cleaned)].find(
-            "on the line now.")]
-    elif cleaned.find("QUESTIONS:") < cleaned.find("OUTRO COPY") and cleaned.find("QUESTIONS:") != -1:
-        intro = cleaned[indexIntroCopyLeft:indexIntroCopyLeft + cleaned[indexIntroCopyLeft:len(cleaned)].find(
-            "QUESTIONS:")]
-    elif cleaned.find("Welcome.") < cleaned.find("OUTRO COPY") and cleaned.find("Welcome.") != -1:
-        intro = cleaned[indexIntroCopyLeft:indexIntroCopyLeft + cleaned[indexIntroCopyLeft:len(cleaned)].find(
-            "Welcome.")]
-    else:
-        intro = cleaned[
-                indexIntroCopyLeft:indexIntroCopyLeft + cleaned[indexIntroCopyLeft:len(cleaned)].find("OUTRO COPY")]
+    intro = cleaned[indexIntroCopyLeft:len(cleaned)]
 
-    # if it's for Prime Cuts, this gives the original air date
-    if GetFileName(fileSlug).find("PRIME CUTS") != -1:
-        forAir = cleaned[cleaned.find("FOR AIR") + len("FOR AIR: "):len(cleaned)]
-        origAired = "(Originally aired" + forAir[0:forAir.find("PRIME")] + ")"
-    else:
-        origAired = ""
+    if intro.find("on the line") != -1:
+        intro = intro[0:intro.find("on the line")]
+    if intro.find("joins me now") != -1:
+        intro = intro[0:intro.find("joins me now")]
+    if intro.find("QUESTIONS:") != -1:
+        intro = intro[0:intro.find("QUESTIONS:")]
+    if intro.find("Welcome.") != -1:
+        intro = intro[0:intro.find("Welcome.")]
+    if intro.find("OUTRO COPY") != -1:
+        intro = intro[0:intro.find("OUTRO COPY")]
 
-    return intro + origAired
+    return intro
 
 
 def ScrapeWord(fileSlug):  # this goes into a word document and returns titlecase headline, guest info, and intro copy
@@ -85,14 +84,21 @@ def ScrapeWord(fileSlug):  # this goes into a word document and returns titlecas
 
     headline = GetHeadline(cleaned)
     guest = GetGuest(cleaned)
-    intro = GetIntroCopy(cleaned, fileSlug)
+    intro = GetIntroCopy(cleaned)
+
+    # if it's for Prime Cuts, this gives the original air date
+    if cleaned.find("PRIME CUTS") != -1:  # GetFileName(fileSlug).find("PRIME CUTS") != -1: <- I might need this
+        forAir = cleaned[cleaned.find("FOR AIR") + len("FOR AIR: "):len(cleaned)]
+        origAired = "(Originally aired" + forAir[0:forAir.find("PRIME")] + ")"
+    else:
+        origAired = ""
 
     # concatenate info, titlecase headline and guest
-    info = titlecase(headline) + "\n" + "Guest: " + titlecase(guest) + "\n" + intro + "\n\n"
+    info = titlecase(headline) + "\n" + "Guest: " + titlecase(guest) + "\n" + intro + " " + origAired + "\n\n"
     return info
 
 
-def GiveEpisodeInfo(fileName): # returns titlecase headline, guest info, and intro copy from word
+def GiveEpisodeInfo(fileName):  # returns titlecase headline, guest info, and intro copy from word
     cleaned = CleanWord(fileName)
 
     # get name and title of guest--should be reviewed for proper formatting
@@ -107,7 +113,9 @@ def GiveEpisodeInfo(fileName): # returns titlecase headline, guest info, and int
     return info
 
 
-def ListSlugs(): #TODO change this to adjust number of slugs, or don't get
+# Work below here, may need some functions above
+
+def ListSlugs():  # TODO change this to adjust number of slugs, or don't get
     slugs = [slug_entry_1.get(), slug_entry_2.get(), slug_entry_3.get(),
              slug_entry_4.get(), slug_entry_5.get(), slug_entry_6.get()]
     return slugs
@@ -152,6 +160,9 @@ def CreateTxt():
         text += ScrapeWord(x)
     InsertTxt(text)
     create_txt_done.grid(row=8, column=1)
+
+
+# print(ScrapeWord("")) you can use this for tests
 
 root = Tk()
 root.title("BYU Top of Mind Web Automated")
